@@ -253,6 +253,47 @@ class View extends Component {
     }
   };
 
+  renderMockAddress() {
+    if (this.props.curData.method === 'WEBSOCKET') {
+      return (
+        <span className="colValue">
+          {'ws://' +
+            location.hostname +
+            (location.port !== '' ? ':' + location.port : '') +
+            `/mock/${this.props.currProject._id}${this.props.currProject.basepath}${
+              this.props.curData.path}`
+          }
+        </span>
+      )
+    } else {
+      return (
+        <span
+          className="href"
+          onClick={() =>
+            window.open(
+              location.protocol +
+                '//' +
+                location.hostname +
+                (location.port !== '' ? ':' + location.port : '') +
+                `/mock/${this.props.currProject._id}${this.props.currProject.basepath}${
+                  this.props.curData.path
+                }`,
+              '_blank'
+            )
+          }
+        >
+          {location.protocol +
+            '//' +
+            location.hostname +
+            (location.port !== '' ? ':' + location.port : '') +
+            `/mock/${this.props.currProject._id}${this.props.currProject.basepath}${
+              this.props.curData.path
+            }`}
+        </span>
+      )
+    }
+  }
+
   render() {
     const dataSource = [];
     if (this.props.curData.req_headers && this.props.curData.req_headers.length) {
@@ -372,7 +413,7 @@ class View extends Component {
       methodColor = 'get';
     }
 
-    const { tag, up_time, title, uid, username } = this.props.curData;
+    const { tag, up_time, title, uid, username, interval_time } = this.props.curData;
 
     let res = (
       <div className="caseContainer">
@@ -456,31 +497,19 @@ class View extends Component {
             </Col>
             <Col span={18} className="colValue">
               {this.flagMsg(this.props.currProject.is_mock_open, this.props.currProject.strice)}
-              <span
-                className="href"
-                onClick={() =>
-                  window.open(
-                    location.protocol +
-                      '//' +
-                      location.hostname +
-                      (location.port !== '' ? ':' + location.port : '') +
-                      `/mock/${this.props.currProject._id}${this.props.currProject.basepath}${
-                        this.props.curData.path
-                      }`,
-                    '_blank'
-                  )
-                }
-              >
-                {location.protocol +
-                  '//' +
-                  location.hostname +
-                  (location.port !== '' ? ':' + location.port : '') +
-                  `/mock/${this.props.currProject._id}${this.props.currProject.basepath}${
-                    this.props.curData.path
-                  }`}
-              </span>
+              { this.renderMockAddress() }
             </Col>
           </Row>
+          {this.props.curData.method === 'WEBSOCKET' && (
+            <Row className="row">
+              <Col span={4} className="colKey">
+                时间间隔：
+              </Col>
+              <Col span={18} className="colValue">
+                {interval_time}&ensp;ms
+              </Col>
+            </Row>
+          )}
           {this.props.curData.custom_field_value &&
             this.props.custom_field.enable && (
               <Row className="row remark">

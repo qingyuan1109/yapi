@@ -65,6 +65,9 @@ export default class MockCol extends Component {
         });
         record.req_body_other = JSON.stringify(result.data);
       }
+      if (!isAdd) {
+        record.method = this.props.currInterface.method;
+      }
 
       this.setState({
         isAdd: isAdd,
@@ -143,7 +146,8 @@ export default class MockCol extends Component {
       delay: 0,
       headers: [{ name: '', value: '' }],
       params: {},
-      res_body: currInterface.res_body
+      res_body: currInterface.res_body,
+      method: currInterface.method
     };
 
     let ipFilters = [];

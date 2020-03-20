@@ -81,6 +81,10 @@ class interfaceController extends baseController {
     const addAndUpCommonField = {
       desc: 'string',
       status: 'string',
+      interval_time: {
+        type: 'number',
+        minimum: 500
+      },
       req_query: [
         {
           name: 'string',
@@ -631,6 +635,10 @@ class interfaceController extends baseController {
     if (!_.isUndefined(params.method)) {
       params.method = params.method || 'GET';
       params.method = params.method.toUpperCase();
+    }
+
+    if (params.method === 'WEBSOCKET') {
+      params.req_headers = [];
     }
 
     let id = params.id;

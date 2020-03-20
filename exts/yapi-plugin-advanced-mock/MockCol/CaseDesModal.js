@@ -65,7 +65,8 @@ class CaseDesForm extends Component {
       paramsArr: [{ name: '', value: '' }],
       params: {},
       res_body: '',
-      paramsForm: 'form'
+      paramsForm: 'form',
+      method: ''
     };
     caseData.params = caseData.params || {};
     const paramsArr = Object.keys(caseData.params).length
@@ -431,19 +432,21 @@ class CaseDesForm extends Component {
             </FormItem>
           </FormItem>
           <h2 className="sub-title">响应</h2>
-          <FormItem {...formItemLayout} required label="HTTP Code">
-            {getFieldDecorator('code', {
-              initialValue: code
-            })(
-              <Select showSearch>
-                {httpCodes.map(code => (
-                  <Option key={'' + code} value={'' + code}>
-                    {'' + code}
-                  </Option>
-                ))}
-              </Select>
-            )}
-          </FormItem>
+          {this.state.method !== 'WEBSOCKET' && (
+            <FormItem {...formItemLayout} required label="HTTP Code">
+              {getFieldDecorator('code', {
+                initialValue: code
+              })(
+                <Select showSearch>
+                  {httpCodes.map(code => (
+                    <Option key={'' + code} value={'' + code}>
+                      {'' + code}
+                    </Option>
+                  ))}
+                </Select>
+              )}
+            </FormItem>
+          )}
           <FormItem {...formItemLayout} label="延时">
             {getFieldDecorator('delay', {
               initialValue: delay,
@@ -451,17 +454,19 @@ class CaseDesForm extends Component {
             })(<InputNumber placeholder="请输入延时时间" min={0} />)}
             <span>ms</span>
           </FormItem>
-          {headersTpl(headers, 'HTTP 头')}
-          <FormItem wrapperCol={{ span: 6, offset: 5 }}>
-            <Button
-              size="default"
-              type="primary"
-              onClick={() => this.addValues('headers')}
-              style={{ width: '100%' }}
-            >
-              <Icon type="plus" /> 添加 HTTP 头
-            </Button>
-          </FormItem>
+          {this.state.method !== 'WEBSOCKET' && headersTpl(headers, 'HTTP 头')}
+          {this.state.method !== 'WEBSOCKET' && (
+            <FormItem wrapperCol={{ span: 6, offset: 5 }}>
+              <Button
+                size="default"
+                type="primary"
+                onClick={() => this.addValues('headers')}
+                style={{ width: '100%' }}
+              >
+                <Icon type="plus" /> 添加 HTTP 头
+              </Button>
+            </FormItem>
+          )}
           <FormItem {...formItemLayout} wrapperCol={{ span: 17 }} label="Body" required>
             <FormItem>
               <AceEditor

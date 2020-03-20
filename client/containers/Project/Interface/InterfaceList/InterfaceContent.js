@@ -7,7 +7,6 @@ import View from './View.js';
 import { Prompt } from 'react-router';
 import { fetchInterfaceData } from '../../../../reducer/modules/interface.js';
 import { withRouter } from 'react-router-dom';
-import Run from './Run/Run.js';
 const plugin = require('client/plugin.js');
 
 const TabPane = Tabs.TabPane;
@@ -119,10 +118,6 @@ class Content extends Component {
       edit: {
         component: Edit,
         name: '编辑'
-      },
-      run: {
-        component: Run,
-        name: '运行'
       }
     };
 

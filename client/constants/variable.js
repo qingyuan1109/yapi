@@ -29,6 +29,10 @@ module.exports = {
     'PATCH': {
       request_body: true,
       default_tab: 'body'
+    },
+    'WEBSOCKET': {
+      request_body: false,
+      default_tab: 'query'
     }
   },
   PROJECT_COLOR: {
@@ -114,6 +118,10 @@ module.exports = {
     options: {
       bac: "#fff3cf",
       color: "#ffbf00"
+    },
+    websocket: {
+      bac: "#cfefdf",
+      color: "#00a854"
     }
   },
   MOCK_SOURCE: [

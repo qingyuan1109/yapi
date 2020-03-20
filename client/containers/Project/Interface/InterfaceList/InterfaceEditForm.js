@@ -877,7 +877,7 @@ class InterfaceEditForm extends Component {
                 <Select
                   value={this.state.method}
                   onChange={this.onChangeMethod}
-                  style={{ width: '15%' }}
+                  style={{ width: '17%' }}
                 >
                   {HTTP_METHOD_KEYS.map(item => {
                     return (
@@ -911,7 +911,7 @@ class InterfaceEditForm extends Component {
                     }
                   ]
                 })(
-                  <Input onChange={this.handlePath} placeholder="/path" style={{ width: '60%' }} />
+                  <Input onChange={this.handlePath} placeholder="/path" style={{ width: '58%' }} />
                 )}
               </InputGroup>
               <Row className="interface-edit-item">
@@ -946,6 +946,19 @@ class InterfaceEditForm extends Component {
                 </Select>
               )}
             </FormItem>
+            {this.state.method === 'WEBSOCKET' && (
+              <FormItem className="interface-edit-item" {...formItemLayout} label="时间间隔(ms)">
+                {getFieldDecorator('interval_time', {
+                  initialValue: this.state.interval_time,
+                  rules: [
+                    {
+                      required: true,
+                      message: '请输入时间间隔'
+                    }
+                  ]
+                })(<Input id="interval_time" placeholder="时间间隔" />)}
+              </FormItem>
+            )}
             {custom_field.enable && (
               <FormItem
                 className="interface-edit-item"
@@ -972,7 +985,7 @@ class InterfaceEditForm extends Component {
                 <RadioButton value="req-body">Body</RadioButton>
               ) : null}
               <RadioButton value="req-query">Query</RadioButton>
-              <RadioButton value="req-headers">Headers</RadioButton>
+              {this.state.method !== 'WEBSOCKET' && <RadioButton value="req-headers">Headers</RadioButton>}
             </RadioGroup>
           </div>
 

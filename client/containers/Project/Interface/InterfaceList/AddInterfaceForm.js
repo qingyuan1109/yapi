@@ -45,7 +45,7 @@ class AddInterfaceForm extends Component {
     const prefixSelector = getFieldDecorator('method', {
       initialValue: 'GET'
     })(
-      <Select style={{ width: 75 }}>
+      <Select style={{ width: 110 }}>
         {HTTP_METHOD_KEYS.map(item => {
           return <Option key={item} value={item}>{item}</Option>
         })}
