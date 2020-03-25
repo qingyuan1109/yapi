@@ -2,10 +2,8 @@ const yapi = require('../yapi.js');
 const projectModel = require('../models/project.js');
 const interfaceModel = require('../models/interface.js');
 const mockExtra = require('../../common/mock-extra.js');
-const { schemaValidator } = require('../../common/utils.js');
 const _ = require('underscore');
 const Mock = require('mockjs');
-const variable = require('../../client/constants/variable.js')
 /**
  *
  * @param {*} apiPath /user/tom
@@ -69,11 +67,8 @@ function matchApi(apiPath, apiRule) {
 // 必填字段是否填写好
 function mockValidator(interfaceData, ctx) {
   let i,
-    j,
     l,
-    len,
     noRequiredArr = [];
-  let method = interfaceData.method.toUpperCase() || 'GET';
   // query 判断
   for (i = 0, l = interfaceData.req_query.length; i < l; i++) {
     let curQuery = interfaceData.req_query[i];
@@ -83,34 +78,9 @@ function mockValidator(interfaceData, ctx) {
       }
     }
   }
-  // form 表单判断
-  if (variable.HTTP_METHOD[method].request_body && interfaceData.req_body_type === 'form') {
-    for (j = 0, len = interfaceData.req_body_form.length; j < len; j++) {
-      let curForm = interfaceData.req_body_form[j];
-      if (curForm && typeof curForm === 'object' && curForm.required === '1') {
-        if (
-          ctx.request.body[curForm.name] ||
-          (ctx.request.body.fields && ctx.request.body.fields[curForm.name]) ||
-          (ctx.request.body.files && ctx.request.body.files[curForm.name])
-        ) {
-          continue;
-        }
-
-        noRequiredArr.push(curForm.name);
-      }
-    }
-  }
-  let validResult;
-  // json schema 判断
-  if (variable.HTTP_METHOD[method].request_body  && interfaceData.req_body_type === 'json' && interfaceData.req_body_is_json_schema === true) {
-    const schema = yapi.commons.json_parse(interfaceData.req_body_other);
-    const params = yapi.commons.json_parse(ctx.request.body);
-    validResult = schemaValidator(schema, params);
-  }
-  if (noRequiredArr.length > 0 || (validResult && !validResult.valid)) {
+  if (noRequiredArr.length > 0) {
     let message = `错误信息：`;
     message += noRequiredArr.length > 0 ? `缺少必须字段 ${noRequiredArr.join(',')}  ` : '';
-    message += validResult && !validResult.valid ? `schema 验证请求参数 ${validResult.message}` : '';
 
     return {
       valid: false,
@@ -121,7 +91,7 @@ function mockValidator(interfaceData, ctx) {
   return { valid: true };
 }
 
-exports.getInterfaceData = async (ctx) => {
+async function getInterface(ctx) {
   let path = ctx.path;
 
   let paths = path.split('/');
@@ -249,9 +219,11 @@ exports.getInterfaceData = async (ctx) => {
         throw e;
     }
   }
-};
+}
 
-exports.getWSMockData = async (ctx, project, interfaceData) => {
+async function mockData(ctx, data) {
+  let project = data.project
+  let interfaceData = data.interfaceData
   let res;
   // mock 返回值处理
   res = interfaceData.res_body;
@@ -325,4 +297,61 @@ exports.getWSMockData = async (ctx, project, interfaceData) => {
       data: null
     };
   }
+}
+
+function websocketMock(ctx, data) {
+  mockData(ctx, data)
+    .then(value => {
+      if (ctx.websocket.readyState === 1) {
+        ctx.websocket.send(JSON.stringify(value));
+      }
+    })
+    .catch(err => {
+      if (ctx.websocket.readyState === 1) {
+        ctx.websocket.send(JSON.stringify(err));
+        ctx.websocket.close();
+      }
+    })
+}
+
+module.exports = async (ctx) => {
+  let timerInterval  //mock定时器
+  let intervalTime   //mock时间间隔
+  let timerOut       //超时定时器
+  let outTime        //心跳超时
+  getInterface(ctx)
+    .then(data => {
+      intervalTime = data.interfaceData.interval_time;
+      outTime = intervalTime*10;
+      if (outTime > 60000) {
+        outTime = 60000;
+      }
+      websocketMock(ctx, data);
+      timerInterval = setInterval(websocketMock, intervalTime, ctx, data);
+      timerOut = setTimeout(() => {
+        ctx.websocket.close();
+      }, outTime);
+    })
+    .catch(err => {
+      if (ctx.websocket.readyState === 1) {
+        ctx.websocket.send(JSON.stringify(err));
+      }
+      ctx.websocket.close();
+    })
+
+  ctx.websocket.on('message', msg => {
+    clearTimeout(timerOut);
+    timerOut = setTimeout(() => {
+      ctx.websocket.close();
+    }, outTime);
+    if (msg === 'ping' && ctx.websocket.readyState === 1) {
+      ctx.websocket.send('pong');
+    }
+    console.log('websocket收到数据：', msg);
+  })
+  ctx.websocket.on('close', () => {
+    clearInterval(timerInterval);
+    clearTimeout(timerOut);
+    console.log('websocket关闭');
+  })
 };
