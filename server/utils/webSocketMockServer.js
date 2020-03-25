@@ -331,6 +331,11 @@ module.exports = async (ctx) => {
       timerOut = setTimeout(() => {
         ctx.websocket.close();
       }, outTime);
+
+      yapi.emitHook('mock_visit', {
+        projectData: data.project,
+        interfaceData: data.interfaceData,
+        ctx: ctx});
     })
     .catch(err => {
       if (ctx.websocket.readyState === 1) {

@@ -120,6 +120,21 @@ var hooks = {
     listener: []
   },
   /**
+     * 用户访问mock地址获取mock数据后触发
+     * @param context Object
+     * {
+     *  projectData: project,
+        interfaceData: interfaceData,
+        ctx: ctx,
+        mockJson: res 
+     * }
+     * 
+     */
+    mock_visit: {
+      type: 'multi',
+      listener: []
+    },
+  /**
    * 增加路由的钩子
    * type Sync
    * @param addPluginRouter Function

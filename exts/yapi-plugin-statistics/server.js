@@ -56,7 +56,7 @@ module.exports = function() {
   });
 
   // MockServer生成mock数据后触发
-  this.bindHook('mock_after', function(context) {
+  this.bindHook('mock_visit', function(context) {
     let interfaceId = context.interfaceData._id;
     let projectId = context.projectData._id;
     let groupId = context.projectData.group_id;
