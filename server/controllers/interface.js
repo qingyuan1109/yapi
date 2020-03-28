@@ -85,6 +85,7 @@ class interfaceController extends baseController {
         type: 'number',
         minimum: 500
       },
+      support_subscription: 'boolean',
       req_query: [
         {
           name: 'string',

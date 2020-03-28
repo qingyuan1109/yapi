@@ -65,7 +65,7 @@ function matchApi(apiPath, apiRule) {
 }
 
 // 必填字段是否填写好
-function mockValidator(interfaceData, ctx) {
+function mockValidator(interfaceData, query) {
   let i,
     l,
     noRequiredArr = [];
@@ -73,7 +73,7 @@ function mockValidator(interfaceData, ctx) {
   for (i = 0, l = interfaceData.req_query.length; i < l; i++) {
     let curQuery = interfaceData.req_query[i];
     if (curQuery && typeof curQuery === 'object' && curQuery.required === '1') {
-      if (!ctx.query[curQuery.name]) {
+      if (!query[curQuery.name]) {
         noRequiredArr.push(curQuery.name);
       }
     }
@@ -196,9 +196,11 @@ async function getInterface(ctx) {
     }
     
     // 必填字段是否填写好
-    if (project.strice) {
-      const validResult = mockValidator(interfaceData, ctx);
-      if (!validResult.valid) {
+    let mockValid = true;
+    if (project.strice || interfaceData.support_subscription) {
+      const validResult = mockValidator(interfaceData, ctx.query);
+      mockValid = validResult.valid;
+      if (!validResult.valid && !interfaceData.support_subscription) {
         throw yapi.commons.resReturn(
             null,
             404,
@@ -209,7 +211,8 @@ async function getInterface(ctx) {
 
     return {
       project: project,
-      interfaceData: interfaceData
+      interfaceData: interfaceData,
+      valid: mockValid
     };
   } catch (e) {
     if (e.message) {
@@ -319,15 +322,19 @@ module.exports = async (ctx) => {
   let intervalTime   //mock时间间隔
   let timerOut       //超时定时器
   let outTime        //心跳超时
+  let infoData       //项目和接口信息
   getInterface(ctx)
     .then(data => {
+      infoData = data;
       intervalTime = data.interfaceData.interval_time;
       outTime = intervalTime*10;
       if (outTime > 60000) {
         outTime = 60000;
       }
-      websocketMock(ctx, data);
-      timerInterval = setInterval(websocketMock, intervalTime, ctx, data);
+      if (!data.interfaceData.support_subscription || data.valid) {
+        websocketMock(ctx, data);
+        timerInterval = setInterval(websocketMock, intervalTime, ctx, data);
+      }
       timerOut = setTimeout(() => {
         ctx.websocket.close();
       }, outTime);
@@ -349,8 +356,35 @@ module.exports = async (ctx) => {
     timerOut = setTimeout(() => {
       ctx.websocket.close();
     }, outTime);
-    if (msg === 'ping' && ctx.websocket.readyState === 1) {
-      ctx.websocket.send('pong');
+    if (typeof msg === 'string') {
+      if (msg === 'ping') {
+        if (ctx.websocket.readyState === 1) {
+          ctx.websocket.send('pong');
+        }
+      } else if(infoData.interfaceData.support_subscription) {
+        try {
+          let query = JSON.parse(msg);
+          if (typeof query === 'object') {
+            clearInterval(timerInterval);
+            let validResult = mockValidator(infoData.interfaceData, query);
+            if (!validResult.valid) {
+              if (ctx.websocket.readyState === 1) {
+                ctx.websocket.send(JSON.stringify(yapi.commons.resReturn(
+                  null,
+                  404,
+                  `消息字段验证不通过, ${validResult.message}`
+                )));
+              }
+            } else {
+              ctx.request.query = query;
+              websocketMock(ctx, infoData);
+              timerInterval = setInterval(websocketMock, intervalTime, ctx, infoData);
+            }
+          }
+        } catch(e) {
+          console.log('err', e.message);
+        }
+      }
     }
     console.log('websocket收到数据：', msg);
   })

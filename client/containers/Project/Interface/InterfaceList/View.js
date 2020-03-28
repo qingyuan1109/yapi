@@ -413,7 +413,7 @@ class View extends Component {
       methodColor = 'get';
     }
 
-    const { tag, up_time, title, uid, username, interval_time } = this.props.curData;
+    const { tag, up_time, title, uid, username } = this.props.curData;
 
     let res = (
       <div className="caseContainer">
@@ -505,8 +505,14 @@ class View extends Component {
               <Col span={4} className="colKey">
                 时间间隔：
               </Col>
-              <Col span={18} className="colValue">
-                {interval_time}&ensp;ms
+              <Col span={8} className="colValue">
+                {this.props.curData.interval_time}&ensp;ms
+              </Col>
+              <Col span={4} className="colKey">
+                消息订阅：
+              </Col>
+              <Col span={8} className='colValue'>
+                {this.props.curData.support_subscription?'支持':'不支持'}
               </Col>
             </Row>
           )}

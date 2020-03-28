@@ -168,6 +168,8 @@ class InterfaceEditForm extends Component {
         path: '',
         status: 'undone',
         method: 'get',
+        interval_time: 1000,
+        support_subscription: false,
 
         req_params: [],
 
@@ -957,6 +959,44 @@ class InterfaceEditForm extends Component {
                     }
                   ]
                 })(<Input id="interval_time" placeholder="时间间隔" />)}
+              </FormItem>
+            )}
+            {this.state.method === 'WEBSOCKET' && (
+              <FormItem className="interface-edit-item"
+              {...formItemLayout}
+              label={
+                <span>
+                  支持消息订阅&nbsp;
+                  <Tooltip
+                    title={
+                      <div>
+                        <p>
+                          1. 消息订阅允许先建立WebSocket连接，通过发送消息来订阅数据推送
+                        </p>
+                        <p>
+                          2. 订阅消息为一个JSON对象，包含属性名和值，属性需要在请求参数设置中定义为必需的Query参数
+                        </p>
+                        <p>
+                          3. 当前仅支持单个订阅，新的订阅会默认关闭上一个订阅
+                        </p>
+                      </div>
+                    }
+                  >
+                    <Icon type="question-circle-o" style={{ width: '10px' }} />
+                  </Tooltip>
+                </span>
+              }
+              >
+                {getFieldDecorator('support_subscription', {
+                  valuePropName: 'checked',
+                  initialValue: this.state.support_subscription,
+                  rules: [
+                    {
+                      required: true,
+                      message: '请选择是否支持发送消息订阅推送'
+                    }
+                  ]
+                })(<Switch checkedChildren="是" unCheckedChildren="否" />)}
               </FormItem>
             )}
             {custom_field.enable && (
